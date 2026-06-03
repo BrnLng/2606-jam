@@ -1,12 +1,25 @@
 class_name GameState
 extends RefCounted
 
-# O estado do tabuleiro representado de forma linear ou coordenada
-# Chave: Vector2i(x, y) -> Valor: int (PIECE_X, PIECE_O, PIECE_NONE)
-var board: Dictionary = {}
-var current_turn: int = GameDefinition.PIECE_X
+var entities: Dictionary = {} # int (ID) -> Entity
+var zones: Dictionary = {}    # String (ID) -> Zone
+var current_turn_owner: int = 1
 var game_over: bool = false
-var winner: int = GameDefinition.PIECE_NONE
+var winner_id: int = 0
+
+var _next_entity_id: int = 1
+
+func create_entity() -> Entity:
+	var id = _next_entity_id
+	_next_entity_id += 1
+	var entity = Entity.new(id)
+	entities[id] = entity
+	return entity
+
+
+func register_zone(zone: Zone) -> void:
+	zones[zone.zone_id] = zone
+
 
 func clone() -> GameState:
 	var copy = GameState.new()
