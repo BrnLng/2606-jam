@@ -1,8 +1,16 @@
 # Godot 4 Board Game Framework
 
+A project to create a framework for board games with graphical interface but also playable at the terminal in automatic rounds to gather data etc.
+
+https://github.com/BrnLng/2606-jam
+
+---
+
 ## CLI App -- ECS Simulation
 
-In a nutshell, it is a procedural game engine. Everything under a testable logic, easy to change and test. This is, the core of the framework. This project is to be the base of a comprehensive board game framework that will allow us to create board games easily and with a solid architecture. The framework will be used to create board games both with a graphical interface but also playable as board games for the terminal in automatic rounds to gather data etc.
+In a nutshell, it is a procedural game engine. Everything built under a testable logic, easy to change and test. This project is to be the base of a comprehensive board game framework that will allow us to create board games easily and with a solid architecture.
+
+Its logic is to be later fully integrated to Godot engine, with all visuals and UI made in it, but all core code should be translatable to any engine/environment.
 
 ### Rules for the CLI frontend:
 

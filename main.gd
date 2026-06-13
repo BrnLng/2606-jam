@@ -2,10 +2,14 @@ class_name Main
 extends SceneTree
 
 var state: GameState
+var definition: GameDefinition
 
 func _init() -> void:
+	print("\n--- Godot CLI App Started ---")
+
 	# 1. Configurando o Estado Agnóstico (Baseado em Zonas e Entidades)
 	state = GameState.new()
+	definition = GameDefinition.new()
 	
 	# Registrando a Zona principal (o Tabuleiro)
 	var board_zone = Zone.new("board", "grid")
@@ -13,53 +17,58 @@ func _init() -> void:
 	state.register_zone(board_zone)
 	
 	print("Jogo configurado: Zona 'board' (ECS based).")
+	
 	_print_board_to_console()
 	
-	# 2. Simulando Ações via Criação de Entidades (Composition Pattern)
-	print("\n--- [Ação 1] Criando Entidade (X) no centro (1,1) ---")
-	_spawn_piece_entity(Vector2i(1, 1), "piece_x")
-	
-	print("\n--- [Ação 2] Criando Entidade (O) no canto (0,0) ---")
-	_spawn_piece_entity(Vector2i(0, 0), "piece_o")
-	
-	print("\n--- [Ação 3] Criando Entidade (X) na direita (2,1) ---")
-	_spawn_piece_entity(Vector2i(2, 1), "piece_x")
+	# Loop Interativo
+	_game_loop()
 	
 	quit()
 
-# Cria uma entidade puramente via componentes (Padrão ECS)
-func _spawn_piece_entity(coord: Vector2i, type_id: String) -> void:
-	var entity = state.create_entity()
-	entity.add_component(GridPositionComponent.new(coord))
-	entity.add_component(TypeComponent.new(type_id))
-	
-	# Adiciona à Zona do tabuleiro
-	var board = state.zones.get("board")
-	if board and board.has_space():
-		board.entity_ids.append(entity.id)
+func _game_loop() -> void:
+	while not state.game_over:
+		print("\nTurno do Jogador %s" % definition.get_piece_name(state.current_turn_owner))
+		print("Digite a coordenada (ex: 0,1 ou 2,2) ou 'q' para sair:")
 		
-	_print_board_to_console()
+		# Godot 4.x has this blocking call for CLI input
+		var input_str = OS.read_string_from_stdin().strip_edges()
+		
+		if input_str.to_lower() == "q" or input_str.to_lower() == "quit":
+			print("Saindo do jogo...")
+			break
+			
+		var parts = input_str.split(",")
+		if parts.size() != 2:
+			print("Formato inválido. Use X,Y (ex: 1,1)")
+			continue
+			
+		var x = parts[0].to_int()
+		var y = parts[1].to_int()
+		var coord = Vector2i(x, y)
+		
+		if GameRules.validate_move(state, definition, coord, state.current_turn_owner):
+			GameRules.apply_move(state, definition, coord, state.current_turn_owner)
+			_print_board_to_console()
+		else:
+			print("Tente novamente.")
+			
+	if state.game_over:
+		if state.winner_id != GameDefinition.PIECE_NONE:
+			print("\n*** JOGADOR %s VENCEU! ***\n" % definition.get_piece_name(state.winner_id))
+		else:
+			print("\n*** EMPATE! ***\n")
 
 # Lendo o estado agnóstico pesquisando por Entidades e Componentes
 func _print_board_to_console() -> void:
-	var board_size = 3
-	print("Turno Atual do Jogador: %d" % state.current_turn_owner)
-	print("Status da Zona 'board':")
+	var board_size = definition.board_size
+	print("\nStatus da Zona 'board':")
 	for y in range(board_size):
 		var row_string = "	"
 		for x in range(board_size):
 			var piece_visual = "."
-			# Query the zone for any entity matching this grid coordinate
-			if state.zones.has("board"):
-				for entity_id in state.zones["board"].entity_ids:
-					var entity = state.entities[entity_id]
-					var pos_comp = entity.get_component(GridPositionComponent) as GridPositionComponent
-					
-					if pos_comp and pos_comp.coord == Vector2i(x, y):
-						var type_comp = entity.get_component(TypeComponent) as TypeComponent
-						if type_comp.type_id == "piece_x": piece_visual = "X"
-						elif type_comp.type_id == "piece_o": piece_visual = "O"
-						break # Stop searching, we found a piece for this tile
+			var type_id = state.get_piece_at(Vector2i(x, y))
+			if type_id == "piece_x": piece_visual = "X"
+			elif type_id == "piece_o": piece_visual = "O"
 			row_string += piece_visual + " "
 		print(row_string)
 
