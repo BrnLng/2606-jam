@@ -2,7 +2,7 @@ class_name Entity
 extends RefCounted
 
 var id: int
-var _components: Dictionary = {}  # Chave: Nome da Classe -> Valor: Instância
+var _components: Dictionary = {} # Key: Class Name -> Value: Instance
 
 
 func _init(_id: int):

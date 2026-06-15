@@ -5,8 +5,8 @@ var zone_id: String
 var entity_ids: Array[int] = []
 var layout_type: String # "grid", "linear", "stack"
 
-# Limites da zona (Component.Limits)
-var max_capacity: int = -1 
+# Zone limits (Component.Limits)
+var max_capacity: int = -1
 
 func _init(_zone_id: String, _layout_type: String = &"linear"):
 	zone_id = _zone_id

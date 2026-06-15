@@ -4,7 +4,7 @@ extends Resource
 @export var board_size: int = 3
 @export var win_condition_length: int = 3
 
-# Definições estáticas dos tipos de peças/jogadores
+# Static definitions of piece/player types
 const PIECE_NONE = 0
 const PIECE_X = 1
 const PIECE_O = 2
