@@ -4,26 +4,60 @@ extends SceneTree
 var state: GameState
 var definition: GameDefinition
 
-# TODO: Later, parse game rules from args and run simulation in batch mode @ var args = OS.get_cmdline_user_args()	# gets only args after ' -- '
+var is_batch_mode: bool = false
+var simulations_to_run: int = 1
 
 func _init() -> void:
 	print("\n--- Godot CLI App Started ---")
 
+	var args = OS.get_cmdline_user_args()
+	for arg in args:
+		if arg == "--batch":
+			is_batch_mode = true
+		elif arg.begins_with("--simulate="):
+			is_batch_mode = true
+			simulations_to_run = arg.get_slice("=", 1).to_int()
+
+	if is_batch_mode:
+		for i in range(simulations_to_run):
+			print("\n--- Starting Simulation %d ---" % (i + 1))
+			_setup_game()
+			_run_batch_simulation()
+	else:
+		_setup_game()
+		_run_interactive_loop()
+		
+	quit()
+
+func _setup_game() -> void:
 	# 1. Agnostic State Configuration
 	state = GameState.new()
 	definition = GameDefinition.new()
 	
 	# 2. Register the main Zone (the Board)
 	var board_zone = Zone.new("board", "grid")
-	board_zone.max_capacity = 9
+	board_zone.max_capacity = definition.board_size * definition.board_size
 	state.register_zone(board_zone)
 	
 	print("Game configured: Zone 'board' (ECS based).")
 	_print_board_to_console()
-	_game_loop()
-	quit()
 
-func _game_loop() -> void:
+func _run_batch_simulation() -> void:
+	while not state.game_over:
+		var valid_moves = GameRules.get_valid_moves(state, definition, state.current_turn_owner)
+		if valid_moves.size() == 0:
+			print("No valid moves available. Forcing game end.")
+			break
+			
+		# Pick a random move
+		var move = valid_moves[randi() % valid_moves.size()]
+		print("\n%s Agent plays: %s" % [definition.get_piece_name(state.current_turn_owner), move])
+		GameRules.apply_move(state, definition, move, state.current_turn_owner)
+		_print_board_to_console()
+		
+	_print_result()
+
+func _run_interactive_loop() -> void:
 	while not state.game_over:
 		print("\n%s Player Turn:" % definition.get_piece_name(state.current_turn_owner))
 		print("Type coordinate (ex: 0,1 or 2,2) or 'q' to quit:")
@@ -50,6 +84,9 @@ func _game_loop() -> void:
 		else:
 			print("Try again.")
 			
+	_print_result()
+
+func _print_result() -> void:
 	if state.game_over:
 		if state.winner_id != GameDefinition.PIECE_NONE:
 			print("\n*** Player %s WINS! ***\n" % definition.get_piece_name(state.winner_id))

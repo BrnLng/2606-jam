@@ -30,6 +30,22 @@ static func validate_move(state: GameState, definition: GameDefinition, coord: V
 
 	return true
 
+# Returns a list of all currently valid moves for a given piece
+static func get_valid_moves(state: GameState, definition: GameDefinition, piece: int) -> Array[Vector2i]:
+	var valid_moves: Array[Vector2i] = []
+	
+	if state.game_over or piece != state.current_turn_owner:
+		return valid_moves
+		
+	for y in range(definition.board_size):
+		for x in range(definition.board_size):
+			var coord = Vector2i(x, y)
+			# Avoid using validate_move directly to prevent console spam
+			if state.get_piece_at(coord) == "":
+				valid_moves.append(coord)
+				
+	return valid_moves
+
 # Applies action directly to state (controlled mutation)
 static func apply_move(state: GameState, definition: GameDefinition, coord: Vector2i, piece: int) -> void:
 	# Spawns entity into the ECS
